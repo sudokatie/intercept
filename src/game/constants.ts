@@ -25,6 +25,10 @@ export const DEFAULT_SPEED = 4;
 export const BOMB_TIMER = 3; // seconds
 export const EXPLOSION_DURATION = 0.5; // seconds
 
+// Match settings
+export const ROUND_TIME = 120; // seconds
+export const ROUNDS_TO_WIN = 3;
+
 // Power-up settings
 export const POWERUP_LIFETIME = 10; // seconds
 export const POWERUP_SPAWN_CHANCE = 0.3;

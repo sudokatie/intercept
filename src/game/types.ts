@@ -78,3 +78,9 @@ export interface BoundingBox {
   width: number;
   height: number;
 }
+
+// Power-up instance
+export interface PowerUp {
+  position: Position;
+  type: PowerUpType;
+}
