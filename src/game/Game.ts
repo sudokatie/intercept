@@ -2,7 +2,7 @@ import { GameState, Position, Direction, PowerUpType, PowerUp, PlayerState } fro
 import { Arena } from './Arena';
 import { Player } from './Player';
 import { BombManager } from './Bomb';
-import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME } from './constants';
+import { SPAWN_POINTS, PLAYER_COLORS, ROUNDS_TO_WIN, ROUND_TIME, POWERUP_LIFETIME } from './constants';
 
 export class Game {
   private _arena: Arena;
@@ -97,6 +97,27 @@ export class Game {
       this.addPowerUp(pu.position, pu.type);
     }
 
+    // Update power-ups: lifetime and explosion destruction
+    const expiredKeys: string[] = [];
+    for (const [key, powerUp] of this._powerUps) {
+      // Check if destroyed by explosion
+      if (this._bombManager.isExplosion(powerUp.position.x, powerUp.position.y)) {
+        expiredKeys.push(key);
+        this._arena.setTile(powerUp.position.x, powerUp.position.y, 0); // Floor
+        continue;
+      }
+      
+      // Decrease lifetime
+      powerUp.lifetime -= dt;
+      if (powerUp.lifetime <= 0) {
+        expiredKeys.push(key);
+        this._arena.setTile(powerUp.position.x, powerUp.position.y, 0); // Floor
+      }
+    }
+    for (const key of expiredKeys) {
+      this._powerUps.delete(key);
+    }
+
     // Check player deaths from explosions
     for (const player of this._players) {
       if (!player.isAlive()) continue;
@@ -159,7 +180,7 @@ export class Game {
 
   private addPowerUp(position: Position, type: PowerUpType): void {
     const key = this.posKey(position);
-    this._powerUps.set(key, { position, type });
+    this._powerUps.set(key, { position, type, lifetime: POWERUP_LIFETIME });
   }
 
   private posKey(pos: Position): string {

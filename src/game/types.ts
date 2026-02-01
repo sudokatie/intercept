@@ -83,4 +83,5 @@ export interface BoundingBox {
 export interface PowerUp {
   position: Position;
   type: PowerUpType;
+  lifetime: number;
 }
