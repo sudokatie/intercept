@@ -1,87 +1,85 @@
-// Tile types in the arena grid
-export enum TileType {
-  Floor = 0,
-  HardWall = 1,
-  SoftBlock = 2,
-  Bomb = 3,
-  Explosion = 4,
-  PowerUp = 5,
-}
-
-// Player state
-export enum PlayerState {
-  Alive = 'alive',
-  Dead = 'dead',
-}
-
-// Power-up types
-export enum PowerUpType {
-  BombUp = 'bomb_up',
-  FireUp = 'fire_up',
-  SpeedUp = 'speed_up',
-}
-
 // Game state
 export enum GameState {
   Menu = 'menu',
   Playing = 'playing',
-  Paused = 'paused',
-  RoundEnd = 'round_end',
-  GameEnd = 'game_end',
+  WaveEnd = 'wave_end',
+  GameOver = 'game_over',
 }
 
-// Movement direction
-export enum Direction {
-  None = 'none',
-  Up = 'up',
-  Down = 'down',
-  Left = 'left',
-  Right = 'right',
-}
-
-// Position in grid
+// Position
 export interface Position {
   x: number;
   y: number;
 }
 
-// Control mapping for a player
-export interface ControlMap {
-  up: string;
-  down: string;
-  left: string;
-  right: string;
-  bomb: string;
-}
-
-// Player statistics
-export interface PlayerStats {
-  bombs: number;
-  fire: number;
-  speed: number;
-  alive: boolean;
-  wins: number;
-}
-
-// Player configuration
-export interface PlayerConfig {
+// City data
+export interface CityData {
   id: number;
-  color: string;
-  controls: ControlMap;
-  spawn: Position;
+  x: number;
+  alive: boolean;
 }
 
-// Bounding box for collision
-export interface BoundingBox {
+// Missile base data
+export interface BaseData {
+  id: number;
+  x: number;
+  ammo: number;
+  maxAmmo: number;
+  alive: boolean;
+}
+
+// Player interceptor missile
+export interface InterceptorData {
+  id: number;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  sourceBaseId: number;
+  speed: number;
 }
 
-// Power-up instance
-export interface PowerUp {
-  position: Position;
-  type: PowerUpType;
-  lifetime: number;
+// Enemy ICBM
+export interface ICBMData {
+  id: number;
+  x: number;
+  y: number;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  speed: number;
+  alive: boolean;
+}
+
+// Explosion phases
+export type ExplosionPhase = 'expanding' | 'lingering' | 'fading';
+
+// Explosion data
+export interface ExplosionData {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  phase: ExplosionPhase;
+  timer: number;
+  alpha: number;
+}
+
+// Wave configuration
+export interface WaveData {
+  number: number;
+  icbmCount: number;
+  icbmSpeed: number;
+  baseAmmo: number;
+}
+
+// Collision result
+export interface CollisionResult {
+  destroyedICBMs: number[];
+  hitCities: number[];
+  hitBases: number[];
 }

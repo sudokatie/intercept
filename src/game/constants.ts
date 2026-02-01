@@ -1,75 +1,66 @@
-import { ControlMap, Position } from './types';
-
-// Grid dimensions
-export const GRID_WIDTH = 13;
-export const GRID_HEIGHT = 11;
-export const TILE_SIZE = 32;
-export const CANVAS_SCALE = 2;
-
 // Canvas dimensions
-export const CANVAS_WIDTH = GRID_WIDTH * TILE_SIZE;
-export const CANVAS_HEIGHT = GRID_HEIGHT * TILE_SIZE;
+export const CANVAS_WIDTH = 640;
+export const CANVAS_HEIGHT = 480;
+export const CANVAS_SCALE = 2;
 export const DISPLAY_WIDTH = CANVAS_WIDTH * CANVAS_SCALE;
 export const DISPLAY_HEIGHT = CANVAS_HEIGHT * CANVAS_SCALE;
 
-// Player settings
-export const PLAYER_BASE_SPEED = 4; // tiles per second
-export const MAX_BOMBS = 8;
-export const MAX_FIRE = 8;
-export const MAX_SPEED = 7;
-export const DEFAULT_BOMBS = 1;
-export const DEFAULT_FIRE = 1;
-export const DEFAULT_SPEED = 4;
+// Ground level
+export const GROUND_Y = 440;
 
-// Bomb settings
-export const BOMB_TIMER = 3; // seconds
-export const EXPLOSION_DURATION = 0.5; // seconds
+// Cities
+export const CITY_COUNT = 6;
+export const CITY_WIDTH = 40;
+export const CITY_HEIGHT = 30;
 
-// Match settings
-export const ROUND_TIME = 120; // seconds
-export const ROUNDS_TO_WIN = 3;
+// Missile bases
+export const BASE_COUNT = 3;
+export const BASE_POSITIONS = [80, 320, 560];
+export const INITIAL_BASE_AMMO = 10;
 
-// Power-up settings
-export const POWERUP_LIFETIME = 10; // seconds
-export const POWERUP_SPAWN_CHANCE = 0.3;
+// Interceptor missile
+export const INTERCEPTOR_SPEED = 400;
 
-// Player colors
-export const PLAYER_COLORS = [
-  '#00ff00', // P1 Green
-  '#ff0000', // P2 Red
-  '#0088ff', // P3 Blue
-  '#ffff00', // P4 Yellow
-];
+// Explosion settings
+export const EXPLOSION_MAX_RADIUS = 40;
+export const EXPLOSION_EXPAND_TIME = 0.3;
+export const EXPLOSION_LINGER_TIME = 0.5;
+export const EXPLOSION_FADE_TIME = 0.2;
 
-// Player controls
-export const PLAYER_CONTROLS: ControlMap[] = [
-  { up: 'w', down: 's', left: 'a', right: 'd', bomb: ' ' }, // P1: WASD + Space
-  { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', bomb: 'Enter' }, // P2: Arrows
-  { up: 'i', down: 'k', left: 'j', right: 'l', bomb: 'b' }, // P3: IJKL + B
-  { up: 'Numpad8', down: 'Numpad5', left: 'Numpad4', right: 'Numpad6', bomb: 'Numpad0' }, // P4: Numpad
-];
+// ICBM settings
+export const INITIAL_ICBM_SPEED = 60;
+export const ICBM_SPEED_INCREMENT = 10;
+export const MAX_ICBM_SPEED = 200;
+export const INITIAL_ICBM_COUNT = 4;
+export const ICBM_COUNT_INCREMENT = 2;
+export const MAX_ICBM_COUNT = 20;
 
-// Spawn points (corners)
-export const SPAWN_POINTS: Position[] = [
-  { x: 1, y: 1 },   // P1: top-left
-  { x: 11, y: 1 },  // P2: top-right
-  { x: 1, y: 9 },   // P3: bottom-left
-  { x: 11, y: 9 },  // P4: bottom-right
-];
+// Collision
+export const HIT_RADIUS = 30;
+
+// Scoring
+export const SCORE_ICBM = 25;
+export const SCORE_CITY_BONUS = 100;
+export const SCORE_AMMO_BONUS = 5;
+export const BONUS_CITY_SCORE = 10000;
+
+// Wave timing
+export const WAVE_SPAWN_DURATION = 5; // Seconds to spawn all ICBMs
 
 // Colors
 export const COLORS = {
-  background: '#1a1a2e',
-  floor: '#2d2d44',
-  hardWall: '#4a4a6a',
-  hardWallLight: '#5a5a7a',
-  softBlock: '#8b6914',
-  softBlockDark: '#6b5010',
-  bomb: '#111111',
-  bombFuse: '#ff6600',
-  explosionCenter: '#ffff00',
+  skyTop: '#001133',
+  skyBottom: '#220033',
+  ground: '#444444',
+  city: '#00ff00',
+  cityDead: '#003300',
+  base: '#00ffff',
+  baseDead: '#003333',
+  interceptorTrail: '#00aaff',
+  interceptorHead: '#ffffff',
+  icbmTrail: '#ff4400',
+  icbmHead: '#ffff00',
+  explosionCenter: '#ffffff',
+  explosionMid: '#ffff00',
   explosionOuter: '#ff6600',
-  powerUpBomb: '#4488ff',
-  powerUpFire: '#ff4444',
-  powerUpSpeed: '#ffff44',
 };
