@@ -3,6 +3,7 @@ import { MissileBase } from './MissileBase';
 import { Interceptor } from './Interceptor';
 import { ICBM } from './ICBM';
 import { Explosion } from './Explosion';
+import { Particle } from './Particle';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -55,6 +56,14 @@ export class Renderer {
     const x = city.x;
     const y = GROUND_Y;
     const halfWidth = CITY_WIDTH / 2;
+
+    // Draw flash effect if city is flashing (just destroyed)
+    if (city.isFlashing) {
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${city.flashAlpha})`;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y - 15, 30, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
 
     this.ctx.fillStyle = city.alive ? COLORS.city : COLORS.cityDead;
 
@@ -204,6 +213,24 @@ export class Renderer {
     }
   }
 
+  drawParticle(particle: Particle): void {
+    this.ctx.fillStyle = particle.color;
+    this.ctx.globalAlpha = particle.alpha;
+    this.ctx.fillRect(
+      particle.x - particle.size / 2,
+      particle.y - particle.size / 2,
+      particle.size,
+      particle.size
+    );
+    this.ctx.globalAlpha = 1;
+  }
+
+  drawParticles(particles: Particle[]): void {
+    for (const particle of particles) {
+      this.drawParticle(particle);
+    }
+  }
+
   drawHUD(score: number, wave: number, citiesAlive: number): void {
     this.ctx.fillStyle = '#ffffff';
     this.ctx.font = '16px monospace';
@@ -227,6 +254,7 @@ export class Renderer {
     interceptors: Interceptor[],
     icbms: ICBM[],
     explosions: Explosion[],
+    particles: Particle[],
     score: number,
     wave: number
   ): void {
@@ -240,6 +268,7 @@ export class Renderer {
     this.drawICBMHeads(icbms);
     this.drawInterceptorHeads(interceptors);
     this.drawExplosions(explosions);
+    this.drawParticles(particles);
 
     const citiesAlive = cities.filter(c => c.alive).length;
     this.drawHUD(score, wave, citiesAlive);

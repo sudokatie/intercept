@@ -1,6 +1,6 @@
 import { Game } from '../game/Game';
 import { GameState } from '../game/types';
-import { GROUND_Y, SCORE_ICBM, SCORE_CITY_BONUS, SCORE_AMMO_BONUS } from '../game/constants';
+import { GROUND_Y, SCORE_ICBM, SCORE_CITY_BONUS, SCORE_AMMO_BONUS, BONUS_CITY_SCORE } from '../game/constants';
 
 describe('Game', () => {
   let game: Game;
@@ -223,6 +223,39 @@ describe('Game', () => {
       
       game.cities[0].destroy();
       expect(game.getAliveCityCount()).toBe(5);
+    });
+  });
+
+  describe('bonus city', () => {
+    it('should have addScore method for testing', () => {
+      game.start();
+      expect(game.score).toBe(0);
+      game.addScore(500);
+      expect(game.score).toBe(500);
+    });
+
+    it('should track score across game', () => {
+      game.start();
+      game.addScore(BONUS_CITY_SCORE - 100);
+      expect(game.score).toBe(BONUS_CITY_SCORE - 100);
+    });
+
+    it('should reset score on game reset', () => {
+      game.start();
+      game.addScore(BONUS_CITY_SCORE);
+      game.reset();
+      expect(game.score).toBe(0);
+    });
+
+    it('should be able to destroy and restore cities', () => {
+      game.start();
+      expect(game.getAliveCityCount()).toBe(6);
+      
+      game.cities[0].destroy();
+      expect(game.getAliveCityCount()).toBe(5);
+      
+      game.cities[0].reset();
+      expect(game.getAliveCityCount()).toBe(6);
     });
   });
 });

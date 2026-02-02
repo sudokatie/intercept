@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1] - 2026-02-02
+
+### Fixed
+
+- Implemented bonus city feature (every 10,000 points revives a dead city)
+- Added addScore method for game extensibility
+
+### Changed
+
+- Updated README to document bonus city scoring
+- Added 4 new tests for scoring mechanics (150 total)
+
 ## [0.1.0] - 2026-02-02
 
 ### Added

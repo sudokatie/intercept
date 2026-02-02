@@ -4,6 +4,7 @@ import { MissileBase } from './MissileBase';
 import { Interceptor } from './Interceptor';
 import { ICBM } from './ICBM';
 import { Explosion } from './Explosion';
+import { Particle, createCityDebris } from './Particle';
 import { WaveManager } from './Wave';
 import { checkAllCollisions } from './Collision';
 import {
@@ -32,19 +33,23 @@ export class Game {
   private _interceptors: Interceptor[];
   private _icbms: ICBM[];
   private _explosions: Explosion[];
+  private _particles: Particle[];
   private _waveManager: WaveManager;
   private _pendingICBMs: ICBM[];
   private _spawnTimers: number[];
   private _waveTimer: number;
+  private _lastBonusCityThreshold: number;
 
   constructor() {
     this._state = GameState.Menu;
     this._score = 0;
+    this._lastBonusCityThreshold = 0;
     this._cities = [];
     this._bases = [];
     this._interceptors = [];
     this._icbms = [];
     this._explosions = [];
+    this._particles = [];
     this._waveManager = new WaveManager();
     this._pendingICBMs = [];
     this._spawnTimers = [];
@@ -82,6 +87,11 @@ export class Game {
     return this._score;
   }
 
+  // Add score (used for testing and potential future features)
+  addScore(points: number): void {
+    this._score += points;
+  }
+
   get wave(): number {
     return this._waveManager.currentWave;
   }
@@ -104,6 +114,10 @@ export class Game {
 
   get explosions(): Explosion[] {
     return [...this._explosions];
+  }
+
+  get particles(): Particle[] {
+    return [...this._particles];
   }
 
   start(): void {
@@ -197,7 +211,11 @@ export class Game {
     for (const cityId of collisionResult.hitCities) {
       const city = this._cities.find(c => c.id === cityId);
       if (city && city.alive) {
-        city.destroy();
+        if (city.destroy()) {
+          // Spawn debris particles
+          const debris = createCityDebris(city.x, GROUND_Y - 15);
+          this._particles.push(...debris);
+        }
       }
     }
 
@@ -214,12 +232,23 @@ export class Game {
     // 8. Remove destroyed ICBMs
     this._icbms = this._icbms.filter(i => i.alive);
 
-    // 9. Check wave end
+    // 9. Update cities (flash timer)
+    for (const city of this._cities) {
+      city.update(dt);
+    }
+
+    // 10. Update and remove dead particles
+    for (const particle of this._particles) {
+      particle.update(dt);
+    }
+    this._particles = this._particles.filter(p => !p.isDead());
+
+    // 11. Check wave end
     if (this._icbms.length === 0 && this._pendingICBMs.length === 0) {
       this.endWave();
     }
 
-    // 10. Check game over
+    // 12. Check game over
     if (this.getAliveCityCount() === 0) {
       this._state = GameState.GameOver;
     }
@@ -239,9 +268,25 @@ export class Game {
     }
 
     // Check for bonus city (every BONUS_CITY_SCORE points)
-    // This is optional and can be added later
+    this.checkBonusCity();
 
     this._state = GameState.WaveEnd;
+  }
+
+  private checkBonusCity(): void {
+    // Calculate how many bonus city thresholds we've crossed
+    const currentThreshold = Math.floor(this._score / BONUS_CITY_SCORE) * BONUS_CITY_SCORE;
+    
+    // Award bonus cities for each new threshold crossed
+    while (this._lastBonusCityThreshold < currentThreshold) {
+      this._lastBonusCityThreshold += BONUS_CITY_SCORE;
+      
+      // Find a dead city to revive
+      const deadCity = this._cities.find(c => !c.alive);
+      if (deadCity) {
+        deadCity.reset();
+      }
+    }
   }
 
   handleClick(x: number, y: number): void {
@@ -269,6 +314,7 @@ export class Game {
         GROUND_Y,
         x,
         y,
+        nearestBase.id,
         INTERCEPTOR_SPEED
       );
       this._interceptors.push(interceptor);
@@ -292,9 +338,11 @@ export class Game {
   reset(): void {
     this._state = GameState.Menu;
     this._score = 0;
+    this._lastBonusCityThreshold = 0;
     this._interceptors = [];
     this._icbms = [];
     this._explosions = [];
+    this._particles = [];
     this._pendingICBMs = [];
     this._spawnTimers = [];
     this._waveTimer = 0;

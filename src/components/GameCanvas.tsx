@@ -55,6 +55,7 @@ export function GameCanvas() {
       game.interceptors,
       game.icbms,
       game.explosions,
+      game.particles,
       game.score,
       game.wave
     );
