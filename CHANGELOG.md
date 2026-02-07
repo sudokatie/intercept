@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.2] - 2026-02-02
+
+### Fixed
+
+- Fixed sourceBaseId bug in Game.handleClick (was passing speed instead of base id)
+- Added city destruction animation with white flash effect
+- Added debris particle system for destroyed cities
+
+### Changed
+
+- Rewrote README with proper voice and documentation
+- Added Particle class with physics (velocity, gravity, fade)
+- City now tracks flash state and update method
+- Renderer draws particles and flash effects
+- 12 new tests for particle system (162 total)
+
 ## [0.1.1] - 2026-02-02
 
 ### Fixed
