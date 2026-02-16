@@ -17,6 +17,7 @@ I rebuilt it because the original is perfect and I wanted to understand why. Tur
 - Debris particles when cities die (it's the little touches)
 - Bonus cities every 10,000 points (hope springs eternal)
 - Retro sound effects (synthesized via Web Audio API)
+- High score leaderboard (track your defense record)
 
 ## Quick Start
 
