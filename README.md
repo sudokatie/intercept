@@ -16,6 +16,7 @@ I rebuilt it because the original is perfect and I wanted to understand why. Tur
 - Explosions with proper expand-linger-fade phases
 - Debris particles when cities die (it's the little touches)
 - Bonus cities every 10,000 points (hope springs eternal)
+- Retro sound effects (synthesized via Web Audio API)
 
 ## Quick Start
 

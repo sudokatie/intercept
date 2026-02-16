@@ -7,6 +7,7 @@ import { Explosion } from './Explosion';
 import { Particle, createCityDebris } from './Particle';
 import { WaveManager } from './Wave';
 import { checkAllCollisions } from './Collision';
+import { Sound } from './Sound';
 import {
   CITY_COUNT,
   BASE_COUNT,
@@ -171,6 +172,7 @@ export class Game {
           EXPLOSION_MAX_RADIUS
         );
         this._explosions.push(explosion);
+        Sound.play('explosion');
       }
     }
     this._interceptors = this._interceptors.filter(i => !arrivedInterceptors.includes(i));
@@ -203,6 +205,7 @@ export class Game {
         const inExplosion = this._explosions.some(e => e.containsPoint(icbm.x, icbm.y));
         if (inExplosion) {
           this._score += SCORE_ICBM;
+          Sound.play('icbmDestroy');
         }
         icbm.destroy();
       }
@@ -215,6 +218,7 @@ export class Game {
           // Spawn debris particles
           const debris = createCityDebris(city.x, GROUND_Y - 15);
           this._particles.push(...debris);
+          Sound.play('cityDestroyed');
         }
       }
     }
@@ -223,6 +227,7 @@ export class Game {
       const base = this._bases.find(b => b.id === baseId);
       if (base && base.alive) {
         base.destroy();
+        Sound.play('baseDestroyed');
       }
     }
 
@@ -251,6 +256,7 @@ export class Game {
     // 12. Check game over
     if (this.getAliveCityCount() === 0) {
       this._state = GameState.GameOver;
+      Sound.play('gameOver');
     }
   }
 
@@ -270,6 +276,7 @@ export class Game {
     // Check for bonus city (every BONUS_CITY_SCORE points)
     this.checkBonusCity();
 
+    Sound.play('waveComplete');
     this._state = GameState.WaveEnd;
   }
 
@@ -285,6 +292,7 @@ export class Game {
       const deadCity = this._cities.find(c => !c.alive);
       if (deadCity) {
         deadCity.reset();
+        Sound.play('bonusCity');
       }
     }
   }
@@ -318,6 +326,7 @@ export class Game {
         INTERCEPTOR_SPEED
       );
       this._interceptors.push(interceptor);
+      Sound.play('launch');
     }
   }
 
@@ -363,5 +372,15 @@ export class Game {
 
   getAliveBaseCount(): number {
     return this._bases.filter(b => b.alive).length;
+  }
+
+  toggleSound(): boolean {
+    const newState = !Sound.isEnabled();
+    Sound.setEnabled(newState);
+    return newState;
+  }
+
+  isSoundEnabled(): boolean {
+    return Sound.isEnabled();
   }
 }
