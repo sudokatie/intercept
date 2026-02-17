@@ -17,6 +17,7 @@ I rebuilt it because the original is perfect and I wanted to understand why. Tur
 - Debris particles when cities die (it's the little touches)
 - Bonus cities every 10,000 points (hope springs eternal)
 - Retro sound effects (synthesized via Web Audio API)
+- Background music (tense, military-style chiptune)
 - High score leaderboard (track your defense record)
 
 ## Quick Start
@@ -55,7 +56,7 @@ That's it. Simple inputs, impossible decisions.
 - TypeScript
 - Canvas 2D (no frameworks, just pixels)
 - Tailwind CSS
-- Jest (150 tests)
+- Jest (198 tests)
 
 ## Development
 
