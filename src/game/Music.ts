@@ -3,7 +3,7 @@
  * Generates tense, military-style chiptune background music.
  */
 
-type MusicTrack = 'gameplay' | 'menu' | 'victory';
+type MusicTrack = 'gameplay' | 'menu' | 'victory' | 'gameover';
 
 interface Note {
   frequency: number;
@@ -153,6 +153,41 @@ class MusicSystem {
     }));
   }
 
+  private getMenuNotes(): Note[] {
+    const bpm = 75;
+    const beat = 60 / bpm;
+    return [
+      { note: 'C4', dur: beat, volume: 0.7 },
+      { note: 'E4', dur: beat, volume: 0.7 },
+      { note: 'G4', dur: beat * 2, volume: 0.6 },
+      { note: 'F4', dur: beat, volume: 0.5 },
+      { note: 'E4', dur: beat * 2, volume: 0.5 },
+    ].map(n => ({ frequency: this.noteToFreq(n.note), duration: n.dur, volume: n.volume }));
+  }
+
+  private getVictoryNotes(): Note[] {
+    const bpm = 130;
+    const beat = 60 / bpm;
+    return [
+      { note: 'G4', dur: beat / 2 },
+      { note: 'C5', dur: beat / 2 },
+      { note: 'E5', dur: beat },
+      { note: 'G5', dur: beat * 2 },
+    ].map(n => ({ frequency: this.noteToFreq(n.note), duration: n.dur }));
+  }
+
+  private getGameoverNotes(): Note[] {
+    const bpm = 60;
+    const beat = 60 / bpm;
+    return [
+      { note: 'G4', dur: beat, volume: 0.7 },
+      { note: 'F4', dur: beat, volume: 0.6 },
+      { note: 'E4', dur: beat, volume: 0.5 },
+      { note: 'D4', dur: beat * 2, volume: 0.4 },
+      { note: 'C4', dur: beat * 2, volume: 0.3 },
+    ].map(n => ({ frequency: this.noteToFreq(n.note), duration: n.dur, volume: n.volume }));
+  }
+
   private scheduleTrack(notes: Note[]): number {
     const ctx = this.getContext();
     if (!ctx) return 0;
@@ -189,9 +224,16 @@ class MusicSystem {
 
     let notes: Note[];
     switch (this.currentTrack) {
-      case 'gameplay':
-        notes = this.getGameplayNotes();
+      case 'menu':
+        notes = this.getMenuNotes();
         break;
+      case 'victory':
+        notes = this.getVictoryNotes();
+        break;
+      case 'gameover':
+        notes = this.getGameoverNotes();
+        break;
+      case 'gameplay':
       default:
         notes = this.getGameplayNotes();
     }
