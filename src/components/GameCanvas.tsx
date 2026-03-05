@@ -128,6 +128,10 @@ export function GameCanvas() {
     gameRef.current?.start();
   }, []);
 
+  const handleStartDaily = useCallback(() => {
+    gameRef.current?.startDaily();
+  }, []);
+
   const handleRestart = useCallback(() => {
     gameRef.current?.reset();
     gameRef.current?.start();
@@ -148,11 +152,16 @@ export function GameCanvas() {
       />
 
       {gameState === GameState.Menu && (
-        <TitleScreen onStart={handleStart} />
+        <TitleScreen onStart={handleStart} onStartDaily={handleStartDaily} />
       )}
 
       {gameState === GameState.GameOver && (
-        <GameOver score={score} wave={wave} onRestart={handleRestart} />
+        <GameOver
+          score={score}
+          wave={wave}
+          onRestart={handleRestart}
+          dailyMode={gameRef.current?.isDailyMode() ?? false}
+        />
       )}
 
       {gameState === GameState.WaveEnd && (
