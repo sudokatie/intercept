@@ -8,6 +8,7 @@ import { Particle, createCityDebris } from './Particle';
 import { WaveManager } from './Wave';
 import { checkAllCollisions } from './Collision';
 import { Sound } from './Sound';
+import { SeededRNG, todaySeed, todayString, DailyLeaderboard } from './Daily';
 import {
   CITY_COUNT,
   BASE_COUNT,
@@ -40,6 +41,12 @@ export class Game {
   private _spawnTimers: number[];
   private _waveTimer: number;
   private _lastBonusCityThreshold: number;
+
+  // Daily challenge state
+  private _dailyMode: boolean = false;
+  private _dailySeed: number = 0;
+  private _dailyDate: string = '';
+  private _dailyRng: SeededRNG | null = null;
 
   constructor() {
     this._state = GameState.Menu;
@@ -123,7 +130,29 @@ export class Game {
 
   start(): void {
     this._state = GameState.Playing;
+    this._dailyMode = false;
+    this._dailyRng = null;
     this.startNextWave();
+  }
+
+  /** Start a daily challenge run */
+  startDaily(): void {
+    this._state = GameState.Playing;
+    this._dailyMode = true;
+    this._dailySeed = todaySeed();
+    this._dailyDate = todayString();
+    this._dailyRng = new SeededRNG(this._dailySeed);
+    this.startNextWave();
+  }
+
+  /** Check if currently in daily mode */
+  isDailyMode(): boolean {
+    return this._dailyMode;
+  }
+
+  /** Get today's daily leaderboard */
+  getDailyLeaderboard(): ReturnType<typeof DailyLeaderboard.getToday> {
+    return DailyLeaderboard.getToday();
   }
 
   private startNextWave(): void {
@@ -136,8 +165,14 @@ export class Game {
       }
     }
 
-    // Generate ICBMs for this wave
-    this._pendingICBMs = this._waveManager.createICBMs(wave, this._cities, this._bases);
+    // Generate ICBMs for this wave - use seeded RNG in daily mode
+    if (this._dailyMode && this._dailyRng) {
+      this._pendingICBMs = this._waveManager.createSeededICBMs(
+        wave, this._cities, this._bases, this._dailyRng
+      );
+    } else {
+      this._pendingICBMs = this._waveManager.createICBMs(wave, this._cities, this._bases);
+    }
     this._spawnTimers = this._waveManager.getSpawnTimes(this._pendingICBMs.length);
     this._waveTimer = 0;
   }
@@ -257,6 +292,16 @@ export class Game {
     if (this.getAliveCityCount() === 0) {
       this._state = GameState.GameOver;
       Sound.play('gameOver');
+      
+      // Record to daily leaderboard if in daily mode
+      if (this._dailyMode) {
+        DailyLeaderboard.recordScore(
+          'Player',
+          this._score,
+          this._waveManager.currentWave,
+          0 // cities saved (none - game over)
+        );
+      }
     }
   }
 
@@ -356,6 +401,12 @@ export class Game {
     this._spawnTimers = [];
     this._waveTimer = 0;
     this._waveManager.reset();
+    
+    // Clear daily mode state
+    this._dailyMode = false;
+    this._dailySeed = 0;
+    this._dailyDate = '';
+    this._dailyRng = null;
 
     // Reset all assets
     for (const city of this._cities) {

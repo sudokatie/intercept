@@ -14,6 +14,7 @@ import {
   CANVAS_WIDTH,
   GROUND_Y,
 } from './constants';
+import { SeededRNG } from './Daily';
 
 let nextIcbmId = 0;
 
@@ -71,6 +72,43 @@ export class WaveManager {
     for (let i = 0; i < wave.icbmCount; i++) {
       const target = targets[Math.floor(Math.random() * targets.length)];
       const startX = Math.random() * (CANVAS_WIDTH - 40) + 20;
+      const startY = 0;
+
+      const icbm = new ICBM(
+        nextIcbmId++,
+        startX,
+        startY,
+        target.x,
+        target.y,
+        wave.icbmSpeed
+      );
+
+      icbms.push(icbm);
+    }
+
+    return icbms;
+  }
+
+  // Create seeded ICBMs for daily challenge
+  createSeededICBMs(
+    wave: WaveData,
+    cities: City[],
+    bases: MissileBase[],
+    rng: SeededRNG
+  ): ICBM[] {
+    const icbms: ICBM[] = [];
+
+    // Get valid targets (alive cities and bases)
+    const targets = this.getValidTargets(cities, bases);
+    if (targets.length === 0) {
+      return icbms;
+    }
+
+    // Create ICBMs with seeded random targets
+    for (let i = 0; i < wave.icbmCount; i++) {
+      const targetIdx = rng.nextInt(0, targets.length);
+      const target = targets[targetIdx];
+      const startX = rng.nextFloat(20, CANVAS_WIDTH - 20);
       const startY = 0;
 
       const icbm = new ICBM(
