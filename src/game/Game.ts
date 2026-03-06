@@ -9,6 +9,7 @@ import { WaveManager } from './Wave';
 import { checkAllCollisions } from './Collision';
 import { Sound } from './Sound';
 import { SeededRNG, todaySeed, todayString, DailyLeaderboard } from './Daily';
+import { Replay, ReplayData } from './Replay';
 import {
   CITY_COUNT,
   BASE_COUNT,
@@ -47,6 +48,12 @@ export class Game {
   private _dailySeed: number = 0;
   private _dailyDate: string = '';
   private _dailyRng: SeededRNG | null = null;
+
+  // Replay system
+  private _replay: Replay = new Replay();
+  private _isPlayback: boolean = false;
+  private _lastReplayData: ReplayData | null = null;
+  private _recordingEnabled: boolean = true;
 
   constructor() {
     this._state = GameState.Menu;
@@ -132,6 +139,12 @@ export class Game {
     this._state = GameState.Playing;
     this._dailyMode = false;
     this._dailyRng = null;
+    // Start recording replay
+    this._isPlayback = false;
+    this._lastReplayData = null;
+    if (this._recordingEnabled) {
+      this._replay.startRecording(1, false);
+    }
     this.startNextWave();
   }
 
@@ -142,6 +155,12 @@ export class Game {
     this._dailySeed = todaySeed();
     this._dailyDate = todayString();
     this._dailyRng = new SeededRNG(this._dailySeed);
+    // Start recording replay
+    this._isPlayback = false;
+    this._lastReplayData = null;
+    if (this._recordingEnabled) {
+      this._replay.startRecording(1, true);
+    }
     this.startNextWave();
   }
 
@@ -153,6 +172,72 @@ export class Game {
   /** Get today's daily leaderboard */
   getDailyLeaderboard(): ReturnType<typeof DailyLeaderboard.getToday> {
     return DailyLeaderboard.getToday();
+  }
+
+  /** Get last recorded replay data */
+  getLastReplayData(): ReplayData | null {
+    return this._lastReplayData;
+  }
+
+  /** Check if currently in playback mode */
+  isPlaybackMode(): boolean {
+    return this._isPlayback;
+  }
+
+  /** Get playback progress (0-1) */
+  getPlaybackProgress(): number {
+    return this._replay.playbackProgress;
+  }
+
+  /** Check if playback is complete */
+  isPlaybackComplete(): boolean {
+    return this._replay.isPlaybackComplete;
+  }
+
+  /** Start playing back a replay */
+  startPlayback(data: ReplayData): void {
+    // Reset game state
+    this.reset();
+    
+    this._dailyMode = data.dailyMode;
+    if (data.dailyMode) {
+      // Recreate the seed from timestamp
+      const replayDate = new Date(data.timestamp);
+      const dateStr = `${replayDate.getFullYear()}-${String(replayDate.getMonth() + 1).padStart(2, '0')}-${String(replayDate.getDate()).padStart(2, '0')}`;
+      let hash = 0;
+      for (let i = 0; i < dateStr.length; i++) {
+        hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+        hash = hash & hash;
+      }
+      this._dailySeed = Math.abs(hash);
+      this._dailyRng = new SeededRNG(this._dailySeed);
+    }
+    
+    // Start playback mode
+    this._isPlayback = true;
+    this._recordingEnabled = false;
+    this._replay.startPlayback(data);
+    this._state = GameState.Playing;
+    this.startNextWave();
+  }
+
+  /** Stop replay playback */
+  stopPlayback(): void {
+    this._isPlayback = false;
+    this._recordingEnabled = true;
+    this._replay.stopPlayback();
+    this._state = GameState.Menu;
+  }
+
+  /** Update playback - call from update loop */
+  private updatePlayback(): void {
+    if (!this._isPlayback || !this._replay.isPlaying) return;
+
+    // Get next click from replay
+    const click = this._replay.getNextClick();
+    if (click) {
+      this.fireAtPosition(click.x, click.y);
+    }
   }
 
   private startNextWave(): void {
@@ -179,6 +264,11 @@ export class Game {
 
   update(dt: number): void {
     if (this._state !== GameState.Playing) return;
+
+    // Handle replay playback
+    if (this._isPlayback) {
+      this.updatePlayback();
+    }
 
     // Spawn pending ICBMs
     this._waveTimer += dt;
@@ -293,6 +383,15 @@ export class Game {
       this._state = GameState.GameOver;
       Sound.play('gameOver');
       
+      // Stop recording replay
+      if (this._replay.isRecording) {
+        this._lastReplayData = this._replay.stopRecording(
+          this._score,
+          this._waveManager.currentWave,
+          0 // cities saved (none - game over)
+        );
+      }
+      
       // Record to daily leaderboard if in daily mode
       if (this._dailyMode) {
         DailyLeaderboard.recordScore(
@@ -344,8 +443,19 @@ export class Game {
 
   handleClick(x: number, y: number): void {
     if (this._state !== GameState.Playing) return;
+    if (this._isPlayback) return; // Ignore manual input during playback
     if (y >= GROUND_Y) return; // Can't click on ground
 
+    // Record click for replay
+    if (this._replay.isRecording) {
+      this._replay.recordClick(x, y);
+    }
+
+    this.fireAtPosition(x, y);
+  }
+
+  /** Fire an interceptor at the given position */
+  private fireAtPosition(x: number, y: number): void {
     // Find nearest base with ammo
     let nearestBase: MissileBase | null = null;
     let nearestDist = Infinity;

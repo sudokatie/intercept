@@ -5,6 +5,7 @@ import { Game } from '@/game/Game';
 import { Renderer } from '@/game/Renderer';
 import { Input } from '@/game/Input';
 import { GameState } from '@/game/types';
+import type { ReplayData } from '@/game/Replay';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -14,6 +15,8 @@ import {
 } from '@/game/constants';
 import { TitleScreen } from './TitleScreen';
 import { GameOver } from './GameOver';
+import { ReplayView } from './ReplayView';
+import { ReplayImport } from './ReplayImport';
 import { Music } from '@/game/Music';
 
 export function GameCanvas() {
@@ -28,6 +31,9 @@ export function GameCanvas() {
   const [score, setScore] = useState(0);
   const [wave, setWave] = useState(1);
   const [cities, setCities] = useState(6);
+  const [showReplayView, setShowReplayView] = useState(false);
+  const [showReplayImport, setShowReplayImport] = useState(false);
+  const [currentReplayData, setCurrentReplayData] = useState<ReplayData | null>(null);
 
   // Game loop
   const loop = useCallback((timestamp: number) => {
@@ -137,6 +143,40 @@ export function GameCanvas() {
     gameRef.current?.start();
   }, []);
 
+  // Replay handlers
+  const handleShowReplayView = useCallback(() => {
+    const data = gameRef.current?.getLastReplayData();
+    if (data) {
+      setCurrentReplayData(data);
+      setShowReplayView(true);
+    }
+  }, []);
+
+  const handleCloseReplayView = useCallback(() => {
+    setShowReplayView(false);
+    setCurrentReplayData(null);
+  }, []);
+
+  const handleOpenReplayImport = useCallback(() => {
+    setShowReplayImport(true);
+  }, []);
+
+  const handleCloseReplayImport = useCallback(() => {
+    setShowReplayImport(false);
+  }, []);
+
+  const handleImportReplay = useCallback((data: ReplayData) => {
+    setShowReplayImport(false);
+    gameRef.current?.startPlayback(data);
+  }, []);
+
+  const handleWatchReplayFromView = useCallback(() => {
+    if (currentReplayData) {
+      setShowReplayView(false);
+      gameRef.current?.startPlayback(currentReplayData);
+    }
+  }, [currentReplayData]);
+
   return (
     <div className="relative inline-block">
       <canvas
@@ -152,7 +192,11 @@ export function GameCanvas() {
       />
 
       {gameState === GameState.Menu && (
-        <TitleScreen onStart={handleStart} onStartDaily={handleStartDaily} />
+        <TitleScreen
+          onStart={handleStart}
+          onStartDaily={handleStartDaily}
+          onWatchReplay={handleOpenReplayImport}
+        />
       )}
 
       {gameState === GameState.GameOver && (
@@ -161,6 +205,8 @@ export function GameCanvas() {
           wave={wave}
           onRestart={handleRestart}
           dailyMode={gameRef.current?.isDailyMode() ?? false}
+          hasReplay={gameRef.current?.getLastReplayData() !== null}
+          onShareReplay={handleShowReplayView}
         />
       )}
 
@@ -170,6 +216,71 @@ export function GameCanvas() {
             WAVE {wave} COMPLETE
           </div>
         </div>
+      )}
+
+      {/* Replay playback progress bar */}
+      {gameRef.current?.isPlaybackMode() && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '10px',
+            right: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              height: '8px',
+              backgroundColor: '#333',
+              borderRadius: '4px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${(gameRef.current?.getPlaybackProgress() ?? 0) * 100}%`,
+                height: '100%',
+                backgroundColor: '#3b82f6',
+                transition: 'width 0.1s',
+              }}
+            />
+          </div>
+          <button
+            onClick={() => gameRef.current?.stopPlayback()}
+            style={{
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              padding: '4px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px',
+            }}
+          >
+            STOP
+          </button>
+        </div>
+      )}
+
+      {/* Replay View Modal */}
+      {showReplayView && currentReplayData && (
+        <ReplayView
+          data={currentReplayData}
+          onClose={handleCloseReplayView}
+          onWatch={handleWatchReplayFromView}
+        />
+      )}
+
+      {/* Replay Import Modal */}
+      {showReplayImport && (
+        <ReplayImport
+          onImport={handleImportReplay}
+          onClose={handleCloseReplayImport}
+        />
       )}
     </div>
   );

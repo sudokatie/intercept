@@ -7,9 +7,11 @@ interface GameOverProps {
   wave: number;
   onRestart: () => void;
   dailyMode: boolean;
+  hasReplay?: boolean;
+  onShareReplay?: () => void;
 }
 
-export function GameOver({ score, wave, onRestart, dailyMode }: GameOverProps) {
+export function GameOver({ score, wave, onRestart, dailyMode, hasReplay, onShareReplay }: GameOverProps) {
   const dailyScores = dailyMode ? DailyLeaderboard.getToday() : [];
   const shareCode = dailyMode ? generateShareCode(todayString(), score) : '';
   const dailyRank = dailyMode ? dailyScores.findIndex(s => s.score === score) + 1 : 0;
@@ -47,6 +49,15 @@ export function GameOver({ score, wave, onRestart, dailyMode }: GameOverProps) {
             </div>
           )}
         </div>
+      )}
+      
+      {hasReplay && onShareReplay && (
+        <button
+          onClick={onShareReplay}
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors mb-3"
+        >
+          SHARE REPLAY
+        </button>
       )}
       
       <button
